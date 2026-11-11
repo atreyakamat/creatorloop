@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+/* CreatorLoop — warm Goa palette: sand, ink, sunset, sea. */
+@theme {
+  --color-sand-50: #fdfaf4;
+  --color-sand-100: #f8f1e4;
+  --color-sand-200: #efe3cc;
+  --color-sand-300: #e2cfab;
+  --color-ink-950: #14110f;
+  --color-ink-900: #1f1b18;
+  --color-ink-700: #4a423c;
+  --color-ink-500: #7a7068;
+  --color-sunset-400: #ff7a55;
+  --color-sunset-500: #ff5a36;
+  --color-sunset-600: #e6431f;
+  --color-sea-500: #0f8b8d;
+  --color-sea-600: #0b6f71;
+  --color-palm-500: #3f7d4e;
+
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Instrument Serif", ui-serif, Georgia, serif;
+
+  --radius-card: 1.25rem;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-sand-50 text-ink-950 font-sans antialiased;
+  }
+  ::selection {
+    @apply bg-sunset-400/30;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-sunset-500;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
