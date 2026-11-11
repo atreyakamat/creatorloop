@@ -1,60 +1,74 @@
 # CreatorLoop
 
-Local creators, real customers. CreatorLoop connects Goa businesses (cafés, restaurants, hotels, shops) with local creators who make reels for them. AI writes the briefs, plans the calendar and reports on what worked; people shoot and edit.
+Local creators, real customers. CreatorLoop connects Goa businesses (cafés, restaurants, hotels, shops) with local creators who make reels for them. AI writes the briefs, suggests creators, plans the calendar and sums up each month; people shoot, edit and decide.
 
 Installable web app (PWA). Wrap for Google Play with Capacitor once there are paying clients.
 
 ## Stack
 
-Next.js 16 (App Router, Cache Components) · TypeScript · Tailwind CSS 4 · Framer Motion · Supabase (Postgres, Auth, Storage) · Claude API (Phase 2) · Netlify
+Next.js 16 (App Router, Cache Components) · TypeScript · Tailwind CSS 4 · Framer Motion · Supabase (Postgres, Auth, Storage) · Claude API · Netlify
 
-## Status
+## What works
 
-| Phase | Scope | State |
-| --- | --- | --- |
-| 1 | Scaffold, auth, database + access rules, landing page, PWA | ✅ Done |
-| 2 | Business onboarding + AI brief generator (Claude) | ✅ Done |
-| 3 | Creator profiles, open briefs, applications, video uploads, reel review | ✅ Done |
-| 4 | Admin panel: assignment, verification, payouts, audit trail | ✅ Done |
-| 5 | AI creator matching, 4-week content plan, monthly report | ✅ Done |
-| 6 | Pilot with 2–3 Goa businesses | Next |
+| Role | Can do |
+| --- | --- |
+| Business | Set up their business, answer 5 questions and get an AI brief, send it to creators, review each reel (approve or request changes), get a 4-week content plan, log results and get a monthly report |
+| Creator | Build a profile, browse open briefs, apply, upload reels for an assigned brief, see feedback, track payouts |
+| Admin | See work queues, get an AI shortlist, assign a creator and set their pay, verify creators, close approved briefs, track payouts |
+
+Not built yet: collecting money from businesses (plans on the landing page are not billed in-app) and sending money to creators (payouts are tracked; you pay by UPI or bank and mark them paid).
 
 ## Set up (one time)
 
-1. **Supabase**: create a project at supabase.com (free tier is fine).
-2. **Database**: in the Supabase dashboard, open *SQL Editor* and run each file in `supabase/migrations/` in order, lowest number first.
-3. **Auth URLs**: *Authentication → URL Configuration*. Set Site URL to `http://localhost:3000` (later your Netlify URL) and add `<site>/auth/confirm` to Redirect URLs.
-4. **Env**: `cp .env.example .env.local`, then fill in the URL and publishable key from *Project Settings → API*, and your `ANTHROPIC_API_KEY` (console.anthropic.com) for AI briefs.
-5. **Run**: `npm install && npm run dev` and open http://localhost:3000.
+1. **Supabase**: create a project (free tier is fine).
+2. **Database**: in the Supabase *SQL Editor*, run each file in `supabase/migrations/` in order, lowest number first.
+3. **Auth**: *Authentication → URL Configuration*. Set Site URL to your site (locally `http://localhost:3000`) and add `<site>/auth/confirm` to Redirect URLs. Keep email confirmation on. Turn on CAPTCHA before a public launch.
+4. **Env**: `cp .env.example .env.local`, then fill in the Supabase URL and publishable key (*Project Settings → API*) and `ANTHROPIC_API_KEY` (console.anthropic.com).
+5. **Run**: `npm install && npm run dev`, open http://localhost:3000.
 6. **Make yourself admin**: sign up in the app, then in the SQL Editor run
    `update public.profiles set role = 'admin' where id = (select id from auth.users where email = 'you@example.com');`
 
-## Roles and access
+Uploads are limited to 50 MB MP4/MOV/WebM. Supabase's free tier also caps files at 50 MB.
 
-- **business**: owns businesses and briefs, reviews submissions for its own briefs.
-- **creator**: edits own profile, sees only briefs assigned to them, uploads to their own storage folder.
-- **admin**: sees and manages everything, the only role that can write payouts.
+## Deploy (Netlify)
 
-Rules are enforced in Postgres with row-level security, not just in the UI. Nobody can pick `admin` at signup or change their own role.
+Connect the repo. `netlify.toml` sets the build. Add the same variables as `.env.local` in *Site settings → Environment variables*, with `NEXT_PUBLIC_SITE_URL` set to the live URL, then update the Supabase Auth URLs to match.
 
-Businesses also can't assign creators, skip a brief ahead to approved, or reset their AI usage; those are database triggers too.
+## How a brief moves
 
-Test them against a local Postgres:
+`draft` → business sends it → `open` → admin assigns a creator → `assigned` → creator uploads → `in_review` → business approves enough reels → `approved` → admin closes and creates the payout → `completed`.
+
+The database moves the middle steps itself as reels are uploaded and reviewed, so nobody can skip ahead.
+
+## Security
+
+Access rules live in Postgres (row-level security and triggers), not just in the UI, and each phase was audited:
+
+- [Phases 1–2](docs/security/phase-1-2-audit.md) · [Phase 3](docs/security/phase-3-audit.md) · [Phase 4](docs/security/phase-4-audit.md) · [Phase 5](docs/security/phase-5-audit.md) · [Final review and live test](docs/security/final-review.md)
+
+Highlights: nobody can pick admin at signup or change their own role; businesses see only their own data; creators see open briefs and their own work; videos are private and served through one-hour signed links; paid payouts are locked; assignments, payouts, verification and role changes are written to an append-only audit trail; AI use is capped per account per day.
+
+## Tests
 
 ```bash
-PGHOST=localhost PGUSER=postgres ./supabase/tests/run.sh
+npm test          # unit tests (validation, redirects, dates)
+npm run test:ai   # AI generators against a local stand-in for the Anthropic API
+npm run test:db   # 76 access-rule checks on a throwaway local Postgres (needs psql; set PGHOST/PGUSER)
+npm run typecheck && npm run lint && npm run build
 ```
 
-Every `T…`/`G…` line should match its `(expect …)`. `ERROR` lines are blocked actions and are expected.
+`test:db` prints `ID what -> actual (expect expected)` for each check and exits non-zero on any mismatch. `ERROR` lines are blocked actions and are expected.
 
-## AI briefs
+## AI features
 
-`src/lib/ai/brief.ts` sends the business profile and the owner's five answers to Claude and gets back a typed brief (title, concept, 3 hooks, shot list, 2 captions, hashtags, audio mood, posting time, creator notes). Output is schema-validated (`src/lib/briefs.ts`).
+| Feature | Where | Limits |
+| --- | --- | --- |
+| Brief writer | `src/lib/ai/brief.ts` | 4 writes per brief, 30 a day per account |
+| Creator shortlist (admin) | `src/lib/ai/match.ts` | 40 a day |
+| 4-week content plan | `src/lib/ai/plan.ts` | 5 a day |
+| Monthly report summary | `src/lib/ai/plan.ts` | 5 a day |
 
-- Limits: 4 AI writes per brief (first draft + 3 rewrites), 10 new briefs per business per day.
-- The prompt forbids inventing prices, offers or opening hours the owner didn't give.
-- Without `ANTHROPIC_API_KEY` the answers still save and the page explains AI is off; no usage is consumed.
-- Set `ANTHROPIC_MODEL` to switch models.
+All output is schema-validated and shown as plain text. Report figures are computed from the database; the AI only writes commentary. Prompts forbid inventing prices, offers, hours or numbers. Set `ANTHROPIC_MODEL` to switch models. Without a key, everything else still works and pages say AI is unavailable.
 
 ## Project map
 
@@ -65,23 +79,22 @@ src/
     (auth)/               login, signup, server actions
     auth/confirm/         email-confirmation link handler
     dashboard/            sends each role to its home
-    business/             dashboard, onboarding, briefs (new + view), server actions
-    creator/ admin/       role dashboards
-    manifest.ts           PWA manifest
-  components/             UI kit, app shell, landing animations
+    business/             briefs, reel review, content plan, report, onboarding
+    creator/              home, open briefs, brief + upload, earnings, profile
+    admin/                overview, briefs + assignment, creators, businesses, payouts
+  components/             UI kit, app shell, navigation, brief view, reel player
   config/site.ts          pricing plans and FAQ copy (edit here)
   lib/
-    auth.ts               data access layer: current user, role guards
-    business.ts           business + brief queries
-    briefs.ts             questionnaire + AI output schemas, limits
-    ai/brief.ts           Claude brief generator
+    auth.ts               current user and role guards
+    business.ts creator.ts admin.ts report.ts   data access per role
+    briefs.ts creators.ts ai-docs.ts            schemas and limits
+    ai/                   Claude client, generators, usage caps
+    safe.ts               redirect, URL, handle and prompt-text sanitisers
     supabase/             server, browser and proxy clients + DB types
-  proxy.ts                session refresh + optimistic route protection
-public/sw.js              service worker (static assets only; never caches signed-in pages)
-supabase/migrations/      schema, RLS, storage bucket
+  proxy.ts                session refresh + first-line route protection
+public/sw.js              service worker (static assets only)
+supabase/migrations/      schema, access rules, storage, audit trail
 supabase/tests/           access-rule tests
+tests/                    unit and AI tests
+docs/security/            audit reports
 ```
-
-## Deploy (Netlify)
-
-Connect the repo, build command `npm run build`, and add the same env vars from `.env.local`. Netlify's Next.js runtime is picked up automatically.
