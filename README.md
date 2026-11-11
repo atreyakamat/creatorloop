@@ -15,7 +15,7 @@ Next.js 16 (App Router, Cache Components) · TypeScript · Tailwind CSS 4 · Fra
 | 1 | Scaffold, auth, database + access rules, landing page, PWA | ✅ Done |
 | 2 | Business onboarding + AI brief generator (Claude) | ✅ Done |
 | 3 | Creator profiles, open briefs, applications, video uploads, reel review | ✅ Done |
-| 4 | Admin panel, payouts, deploy | |
+| 4 | Admin panel: assignment, verification, payouts, audit trail | ✅ Done |
 | 5 | Pilot with 2–3 Goa businesses | |
 
 ## Set up (one time)

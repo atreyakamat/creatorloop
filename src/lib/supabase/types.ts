@@ -90,6 +90,7 @@ export type Payout = {
   brief_id: string | null;
   amount_inr: number;
   status: PayoutStatus;
+  note: string | null;
   paid_at: string | null;
   created_at: string;
 };
@@ -99,6 +100,16 @@ export type BriefApplication = {
   brief_id: string;
   creator_id: string;
   note: string | null;
+  created_at: string;
+};
+
+export type AuditLog = {
+  id: number;
+  actor: string | null;
+  action: string;
+  entity: string;
+  entity_id: string | null;
+  detail: Json;
   created_at: string;
 };
 
@@ -119,12 +130,14 @@ export type Database = {
       submissions: Table<Submission, "brief_id" | "creator_id" | "video_path">;
       payouts: Table<Payout, "creator_id" | "amount_inr">;
       ai_usage: Table<AiUsage, "user_id" | "kind">;
+      audit_log: Table<AuditLog, "action" | "entity">;
       brief_applications: Table<BriefApplication, "brief_id" | "creator_id">;
     };
     Views: { [_ in never]: never };
     Functions: {
       my_role: { Args: Record<string, never>; Returns: UserRole };
       is_admin: { Args: Record<string, never>; Returns: boolean };
+      admin_close_brief: { Args: { p_brief: string; p_amount: number; p_note?: string }; Returns: string };
     };
     Enums: {
       user_role: UserRole;

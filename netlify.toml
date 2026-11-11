@@ -1,0 +1,7 @@
+# Netlify picks up Next.js automatically; this pins the build so deploys are repeatable.
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
