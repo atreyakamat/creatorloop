@@ -1,6 +1,7 @@
 import "server-only";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { isUuid } from "@/lib/safe";
 
 // Business data access. RLS already scopes every query to the owner;
 // these helpers also filter explicitly so an admin sees only their own here.
@@ -31,7 +32,7 @@ export async function getMyBriefs(businessId: string) {
 
 export async function getMyBrief(id: string) {
   const { business } = await getMyBusiness();
-  if (!business || !/^[0-9a-f-]{36}$/i.test(id)) return null;
+  if (!business || !isUuid(id)) return null;
   const supabase = await createClient();
   const { data } = await supabase
     .from("briefs")

@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useSearchParams } from "next/navigation";
 import { signIn, type AuthState } from "../actions";
 import { Button, Field } from "@/components/ui";
+import { safeRedirectPath } from "@/lib/safe";
 import { FormAlert } from "@/components/form-alert";
 
 export function LoginForm() {
@@ -14,7 +15,7 @@ export function LoginForm() {
 
   return (
     <form action={action} className="space-y-4">
-      <input type="hidden" name="next" value={params.get("next") ?? "/dashboard"} />
+      <input type="hidden" name="next" value={safeRedirectPath(params.get("next"))} />
       <Field label="Email" name="email" type="email" autoComplete="email" required />
       <Field label="Password" name="password" type="password" autoComplete="current-password" required />
       <FormAlert error={state?.error ?? confirmError} message={state?.message} />

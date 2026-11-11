@@ -93,6 +93,13 @@ export type Payout = {
   created_at: string;
 };
 
+export type AiUsage = {
+  id: number;
+  user_id: string;
+  kind: "brief" | "match" | "calendar" | "report";
+  created_at: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -102,6 +109,7 @@ export type Database = {
       briefs: Table<Brief, "business_id" | "title">;
       submissions: Table<Submission, "brief_id" | "creator_id" | "video_path">;
       payouts: Table<Payout, "creator_id" | "amount_inr">;
+      ai_usage: Table<AiUsage, "user_id" | "kind">;
     };
     Views: { [_ in never]: never };
     Functions: {

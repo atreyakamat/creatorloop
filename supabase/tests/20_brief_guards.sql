@@ -5,7 +5,7 @@ set role authenticated;
 -- Business A on its own brief
 select set_config('request.jwt.claim.sub','aaaaaaaa-0000-0000-0000-000000000001',false);
 update public.briefs set assigned_creator_id = 'cccccccc-0000-0000-0000-000000000002' where id = 'eeeeeeee-0000-0000-0000-00000000000a';
-select 'G1 bizA self-assign blocked -> creator still ' || right(assigned_creator_id::text, 1) || ' (expect 1)' from public.briefs where id = 'eeeeeeee-0000-0000-0000-00000000000a';
+select 'G1 bizA self-assign blocked, creator still -> ' || right(assigned_creator_id::text, 1) || ' (expect 1)' from public.briefs where id = 'eeeeeeee-0000-0000-0000-00000000000a';
 
 insert into public.briefs (id, business_id, title, status, ai_generations, assigned_creator_id)
 values ('eeeeeeee-0000-0000-0000-00000000000c','bbbbbbbb-0000-0000-0000-00000000000a','New', 'completed', 99, 'cccccccc-0000-0000-0000-000000000001');

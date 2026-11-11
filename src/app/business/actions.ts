@@ -6,6 +6,8 @@ import { z } from "zod";
 import { getMyBusiness } from "@/lib/business";
 import { createClient } from "@/lib/supabase/server";
 import { AiNotConfiguredError, aiConfigured, generateAiBrief } from "@/lib/ai/brief";
+import { reserveAiUse } from "@/lib/ai/usage";
+import { cleanInstagram, isUuid } from "@/lib/safe";
 import {
   CATEGORIES,
   MAX_AI_GENERATIONS,
@@ -29,7 +31,7 @@ const businessSchema = z.object({
   name: z.string().trim().min(2, "Enter your business name").max(80),
   category: z.enum(CATEGORIES, { error: "Pick a category" }),
   area: optionalText(60),
-  instagram: optionalText(60).transform((v) => (v ? v.replace(/^@/, "").replace(/^https?:\/\/(www\.)?instagram\.com\//, "").replace(/\/$/, "") : null)),
+  instagram: optionalText(120).transform((v) => cleanInstagram(v)),
   about: optionalText(400),
   audience: optionalText(300),
   price_range: z
@@ -96,6 +98,7 @@ export async function createBrief(_: FormState, formData: FormData): Promise<For
 }
 
 export async function regenerateBrief(briefId: string) {
+  if (!isUuid(briefId)) redirect("/business");
   const { business } = await getMyBusiness();
   if (!business) redirect("/business/onboarding");
 
@@ -117,6 +120,7 @@ export async function regenerateBrief(briefId: string) {
 }
 
 export async function setBriefStatus(briefId: string, status: "open" | "cancelled") {
+  if (!isUuid(briefId) || (status !== "open" && status !== "cancelled")) redirect("/business");
   const { business } = await getMyBusiness();
   if (!business) redirect("/business/onboarding");
 
@@ -131,6 +135,7 @@ export async function setBriefStatus(briefId: string, status: "open" | "cancelle
 
   // Only send briefs that have AI content; only draft/open briefs can change here.
   if (status === "open" && !brief.ai_brief) redirect(`/business/briefs/${briefId}`);
+  if (brief.status !== "draft" && brief.status !== "open") redirect(`/business/briefs/${briefId}`);
   await supabase.from("briefs").update({ status }).eq("id", briefId);
 
   if (status === "cancelled") redirect("/business");
@@ -158,6 +163,7 @@ async function runGeneration(
     .select("id")
     .maybeSingle();
   if (!reserved) return "limit";
+  if (!(await reserveAiUse("brief"))) return "limit";
 
   try {
     const ai = await generateAiBrief({ business, answers });

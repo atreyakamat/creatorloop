@@ -2,6 +2,7 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { aiBriefSchema, goalLabel, type AiBrief, type BriefAnswers } from "@/lib/briefs";
+import { promptText } from "@/lib/safe";
 import type { Business } from "@/lib/supabase/types";
 
 const MODEL = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-5-5";
@@ -52,20 +53,20 @@ export async function generateAiBrief(input: {
   const userMessage = `Today is ${today}.
 
 <business>
-Name: ${business.name}
-Type: ${business.category}
-Area: ${business.area || "Goa"}
-What they offer: ${business.about || "not given"}
-Who comes in today: ${business.audience || "not given"}
+Name: ${promptText(business.name)}
+Type: ${promptText(business.category)}
+Area: ${promptText(business.area, "Goa")}
+What they offer: ${promptText(business.about)}
+Who comes in today: ${promptText(business.audience)}
 Price range: ${business.price_range || "not given"}
-Instagram: ${business.instagram || "not given"}
+Instagram: ${promptText(business.instagram)}
 </business>
 
 <answers>
 Goal: ${goalLabel(answers.goal)}
-Feature this: ${answers.feature}
-What makes them different: ${answers.difference}
-Offer or call to action: ${answers.offer || "none given"}
+Feature this: ${promptText(answers.feature)}
+What makes them different: ${promptText(answers.difference)}
+Offer or call to action: ${promptText(answers.offer, "none given")}
 Vibe: ${answers.vibes.join(", ")}
 Reels needed: ${answers.deliverables}
 </answers>

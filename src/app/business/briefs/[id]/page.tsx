@@ -26,7 +26,7 @@ export default function BriefPage({ params, searchParams }: Props) {
 
 const aiMessages: Record<string, string> = {
   not_configured: "AI isn't switched on yet. Add ANTHROPIC_API_KEY to the server environment, then try again.",
-  limit: "You've used all the rewrites for this brief.",
+  limit: "You've reached the AI limit for now. Try again tomorrow, or send the brief as it is.",
   failed: "The AI couldn't write this brief just now. Your answers are saved, so try again in a moment.",
 };
 
