@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { Store, Clapperboard } from "lucide-react";
 import { signUp, type AuthState } from "../actions";
 import { Button, Field, cn } from "@/components/ui";
-import { FormAlert } from "../form-alert";
+import { FormAlert } from "@/components/form-alert";
 
 const roles = [
   { value: "business", label: "I run a business", sub: "Café, restaurant, hotel, shop", Icon: Store },

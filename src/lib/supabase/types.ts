@@ -1,4 +1,4 @@
-// Hand-written to match supabase/migrations/0001_init.sql.
+// Hand-written to match supabase/migrations/*.sql.
 // Once the Supabase project exists, regenerate with:
 //   npx supabase gen types typescript --project-id <id> > src/lib/supabase/types.ts
 
@@ -15,6 +15,7 @@ export type BriefStatus =
   | "cancelled";
 export type SubmissionStatus = "pending" | "changes_requested" | "approved";
 export type PayoutStatus = "pending" | "paid";
+export type PriceRange = "budget" | "mid" | "premium";
 
 type Timestamps = { created_at: string; updated_at: string };
 
@@ -41,6 +42,9 @@ export type Business = Timestamps & {
   area: string | null;
   instagram: string | null;
   website: string | null;
+  about: string | null;
+  audience: string | null;
+  price_range: PriceRange | null;
 };
 
 export type CreatorProfile = Timestamps & {
@@ -66,6 +70,7 @@ export type Brief = Timestamps & {
   status: BriefStatus;
   assigned_creator_id: string | null;
   due_date: string | null;
+  ai_generations: number;
 };
 
 export type Submission = Timestamps & {

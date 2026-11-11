@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { useSearchParams } from "next/navigation";
 import { signIn, type AuthState } from "../actions";
 import { Button, Field } from "@/components/ui";
-import { FormAlert } from "../form-alert";
+import { FormAlert } from "@/components/form-alert";
 
 export function LoginForm() {
   const params = useSearchParams();
