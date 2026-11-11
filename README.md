@@ -16,7 +16,9 @@ Next.js 16 (App Router, Cache Components) · TypeScript · Tailwind CSS 4 · Fra
 | Creator | Build a profile, browse open briefs, apply, upload reels for an assigned brief, see feedback, track payouts |
 | Admin | See work queues, get an AI shortlist, assign a creator and set their pay, verify creators, close approved briefs, track payouts |
 
-Not built yet: collecting money from businesses (plans on the landing page are not billed in-app) and sending money to creators (payouts are tracked; you pay by UPI or bank and mark them paid).
+Money: an admin sets each business's plan and monthly reel allowance and raises invoices; businesses pay by UPI from the invoice and the admin marks it paid. Creator payouts are tracked the same way. The app records payments but does not move money.
+
+**Going live? Follow [docs/LAUNCH.md](docs/LAUNCH.md).**
 
 ## Set up (one time)
 
@@ -36,7 +38,7 @@ Connect the repo. `netlify.toml` sets the build. Add the same variables as `.env
 
 ## How a brief moves
 
-`draft` → business sends it → `open` → admin assigns a creator → `assigned` → creator uploads → `in_review` → business approves enough reels → `approved` → admin closes and creates the payout → `completed`.
+`draft` → business sends it (needs a plan with reels left this month) → `open` → admin assigns a creator → `assigned` → creator uploads → `in_review` → business approves enough reels → `approved` → admin closes and creates the payout → `completed`.
 
 The database moves the middle steps itself as reels are uploaded and reviewed, so nobody can skip ahead.
 
@@ -44,7 +46,7 @@ The database moves the middle steps itself as reels are uploaded and reviewed, s
 
 Access rules live in Postgres (row-level security and triggers), not just in the UI, and each phase was audited:
 
-- [Phases 1–2](docs/security/phase-1-2-audit.md) · [Phase 3](docs/security/phase-3-audit.md) · [Phase 4](docs/security/phase-4-audit.md) · [Phase 5](docs/security/phase-5-audit.md) · [Final review and live test](docs/security/final-review.md)
+- [Phases 1–2](docs/security/phase-1-2-audit.md) · [Phase 3](docs/security/phase-3-audit.md) · [Phase 4](docs/security/phase-4-audit.md) · [Phase 5](docs/security/phase-5-audit.md) · [Final review and live test](docs/security/final-review.md) · [Launch work](docs/security/launch-audit.md)
 
 Highlights: nobody can pick admin at signup or change their own role; businesses see only their own data; creators see open briefs and their own work; videos are private and served through one-hour signed links; paid payouts are locked; assignments, payouts, verification and role changes are written to an append-only audit trail; AI use is capped per account per day.
 
@@ -53,7 +55,7 @@ Highlights: nobody can pick admin at signup or change their own role; businesses
 ```bash
 npm test          # unit tests (validation, redirects, dates)
 npm run test:ai   # AI generators against a local stand-in for the Anthropic API
-npm run test:db   # 76 access-rule checks on a throwaway local Postgres (needs psql; set PGHOST/PGUSER)
+npm run test:db   # 86 access-rule checks on a throwaway local Postgres (needs psql; set PGHOST/PGUSER)
 npm run typecheck && npm run lint && npm run build
 ```
 
@@ -79,9 +81,11 @@ src/
     (auth)/               login, signup, server actions
     auth/confirm/         email-confirmation link handler
     dashboard/            sends each role to its home
-    business/             briefs, reel review, content plan, report, onboarding
+    business/             briefs, reel review, content plan, report, billing, onboarding
     creator/              home, open briefs, brief + upload, earnings, profile
-    admin/                overview, briefs + assignment, creators, businesses, payouts
+    admin/                overview, briefs + assignment, creators, businesses + plans + invoices, payouts
+    terms/ privacy/       public legal pages
+    reset-password/       set a new password from the emailed link
   components/             UI kit, app shell, navigation, brief view, reel player
   config/site.ts          pricing plans and FAQ copy (edit here)
   lib/

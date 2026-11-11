@@ -21,7 +21,7 @@ assert.deepEqual(picks.map((p) => p.id), ["id-2", "id-1"]); console.log("PASS ma
 
 const seen = await (await fetch("http://localhost:4010/__seen", { method: "POST", body: "{}" })).json();
 assert.equal(seen.length, 4);
-assert.ok(seen.every((r: any) => r.path === "/v1/messages" && r.key === "Bearer test-key" && r.hasSystem && r.fmt === "json_schema" && r.model === "claude-sonnet-5-5"));
+assert.ok(seen.every((r: { path: string; key: string; hasSystem: boolean; fmt: string; model: string }) => r.path === "/v1/messages" && r.key === "Bearer test-key" && r.hasSystem && r.fmt === "json_schema" && r.model === "claude-sonnet-5-5"));
 console.log("PASS every call uses the Messages API with a system prompt and a JSON schema");
 assert.ok(!seen[0].user.includes("<system>") && !seen[0].user.includes("</business><"), seen[0].user);
 console.log("PASS injected tags are stripped from the prompt");

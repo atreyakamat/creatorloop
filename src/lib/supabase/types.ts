@@ -16,6 +16,8 @@ export type BriefStatus =
 export type SubmissionStatus = "pending" | "changes_requested" | "approved";
 export type PayoutStatus = "pending" | "paid";
 export type PriceRange = "budget" | "mid" | "premium";
+export type PlanId = "none" | "starter" | "growth" | "custom";
+export type InvoiceStatus = "due" | "paid" | "void";
 
 type Timestamps = { created_at: string; updated_at: string };
 
@@ -45,6 +47,8 @@ export type Business = Timestamps & {
   about: string | null;
   audience: string | null;
   price_range: PriceRange | null;
+  plan: PlanId;
+  reels_per_month: number;
 };
 
 export type CreatorProfile = Timestamps & {
@@ -72,6 +76,7 @@ export type Brief = Timestamps & {
   assigned_creator_id: string | null;
   due_date: string | null;
   ai_generations: number;
+  opened_at: string | null;
 };
 
 export type Submission = Timestamps & {
@@ -102,6 +107,17 @@ export type BriefApplication = {
   brief_id: string;
   creator_id: string;
   note: string | null;
+  created_at: string;
+};
+
+export type Invoice = {
+  id: string;
+  business_id: string;
+  period: string;
+  amount_inr: number;
+  status: InvoiceStatus;
+  note: string | null;
+  paid_at: string | null;
   created_at: string;
 };
 
@@ -142,6 +158,7 @@ export type Database = {
       ai_usage: Table<AiUsage, "user_id" | "kind">;
       audit_log: Table<AuditLog, "action" | "entity">;
       ai_documents: Table<AiDocument, "business_id" | "kind" | "period" | "content">;
+      invoices: Table<Invoice, "business_id" | "period" | "amount_inr">;
       brief_applications: Table<BriefApplication, "brief_id" | "creator_id">;
     };
     Views: { [_ in never]: never };
@@ -155,6 +172,7 @@ export type Database = {
       brief_status: BriefStatus;
       submission_status: SubmissionStatus;
       payout_status: PayoutStatus;
+      invoice_status: InvoiceStatus;
     };
     CompositeTypes: { [_ in never]: never };
   };

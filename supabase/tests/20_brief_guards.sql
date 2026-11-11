@@ -1,5 +1,7 @@
 \set ON_ERROR_STOP 0
 -- Runs after 10_rls.sql (same database, same seed users).
+-- Sending a brief needs a plan (0008); give the seed businesses one.
+update public.businesses set plan = 'growth', reels_per_month = 8;
 set role authenticated;
 
 -- Business A on its own brief

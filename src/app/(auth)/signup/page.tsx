@@ -15,7 +15,18 @@ export default function SignupPage() {
           <SignupForm />
         </Suspense>
       </div>
-      <p className="mt-6 text-sm text-ink-500">
+      <p className="mt-6 text-xs text-ink-500">
+        By creating an account you agree to our{" "}
+        <Link href="/terms" className="underline underline-offset-4">
+          Terms
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy" className="underline underline-offset-4">
+          Privacy Policy
+        </Link>
+        .
+      </p>
+      <p className="mt-4 text-sm text-ink-500">
         Already have an account?{" "}
         <Link href="/login" className="font-medium text-ink-950 underline underline-offset-4">
           Log in

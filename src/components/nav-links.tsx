@@ -38,6 +38,7 @@ export const businessNav: NavItem[] = [
   { href: "/business", label: "Briefs", exact: true, also: ["/business/briefs"] },
   { href: "/business/plan", label: "Content plan" },
   { href: "/business/report", label: "Report" },
+  { href: "/business/billing", label: "Billing" },
   { href: "/business/onboarding", label: "My business" },
 ];
 

@@ -16,6 +16,11 @@ export default function LoginPage() {
         </Suspense>
       </div>
       <p className="mt-6 text-sm text-ink-500">
+        <Link href="/forgot-password" className="font-medium text-ink-950 underline underline-offset-4">
+          Forgot your password?
+        </Link>
+      </p>
+      <p className="mt-2 text-sm text-ink-500">
         New here?{" "}
         <Link href="/signup" className="font-medium text-ink-950 underline underline-offset-4">
           Create an account

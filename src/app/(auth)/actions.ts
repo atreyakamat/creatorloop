@@ -67,3 +67,39 @@ export async function signOut() {
   await supabase.auth.signOut();
   redirect("/");
 }
+
+// ─── Password reset ─────────────────────────────────────────────────────────
+
+export async function requestPasswordReset(_: AuthState, formData: FormData): Promise<AuthState> {
+  const parsed = z.object({ email: z.email("Enter a valid email") }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+    redirectTo: `${siteUrl()}/auth/confirm?next=/reset-password`,
+  });
+  if (error?.status === 429) return { error: "Too many attempts. Please wait a minute and try again." };
+  // Same answer whether or not the account exists, so emails can't be probed.
+  return { message: "If that email has an account, a reset link is on its way." };
+}
+
+export async function updatePassword(_: AuthState, formData: FormData): Promise<AuthState> {
+  const parsed = z
+    .object({
+      password: z.string().min(8, "Password must be at least 8 characters").max(72, "Password is too long"),
+      confirm: z.string(),
+    })
+    .refine((v) => v.password === v.confirm, "The two passwords don't match")
+    .safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message };
+
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  if (!data?.claims?.sub) redirect("/login");
+
+  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
+  if (error) {
+    return { error: error.code === "weak_password" ? "Choose a stronger password." : "Couldn't update the password. Open the reset link again." };
+  }
+  redirect("/dashboard");
+}

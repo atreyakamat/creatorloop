@@ -3,6 +3,8 @@ import { AppShell } from "@/components/app-shell";
 import { adminNav } from "@/components/nav-links";
 import { Card } from "@/components/ui";
 import { formatDay } from "@/components/brief-content";
+import Link from "next/link";
+import { planName } from "@/config/site";
 import { listBusinesses } from "@/lib/admin";
 
 export const metadata: Metadata = { title: "Businesses · Admin" };
@@ -24,7 +26,20 @@ async function Businesses() {
         <ul className="mt-6 space-y-3">
           {businesses.map((b) => (
             <li key={b.id} className="rounded-2xl border border-ink-950/8 bg-white p-5">
-              <p className="font-medium">{b.name}</p>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <Link href={`/admin/businesses/${b.id}`} className="font-medium underline-offset-4 hover:underline">
+                  {b.name}
+                </Link>
+                <span
+                  className={
+                    b.plan === "none"
+                      ? "rounded-full bg-sand-100 px-2.5 py-1 text-xs font-medium text-ink-700"
+                      : "rounded-full bg-palm-500/15 px-2.5 py-1 text-xs font-medium text-palm-500"
+                  }
+                >
+                  {b.plan === "none" ? "No plan" : `${planName(b.plan)} · ${b.reels_per_month}/month`}
+                </span>
+              </div>
               <p className="mt-1 text-sm text-ink-500">
                 {b.category}
                 {b.area ? ` · ${b.area}` : ""}

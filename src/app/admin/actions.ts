@@ -9,6 +9,7 @@ import { getAdminBrief } from "@/lib/admin";
 import { aiConfigured } from "@/lib/ai/client";
 import { suggestCreators } from "@/lib/ai/match";
 import { reserveAiUse } from "@/lib/ai/usage";
+import { monthRange, parseMonth } from "@/lib/ai-docs";
 
 export type AdminState = { error?: string; ok?: string } | undefined;
 
@@ -145,4 +146,60 @@ export async function suggestMatches(briefId: string): Promise<MatchState> {
     console.error("[ai-match] failed", { briefId, err });
     return { error: "The AI couldn't suggest anyone just now. Try again in a moment." };
   }
+}
+
+// ─── Plans and invoices ─────────────────────────────────────────────────────
+
+export async function setBusinessPlan(businessId: string, _: AdminState, formData: FormData): Promise<AdminState> {
+  await requireRole("admin");
+  const parsed = z
+    .object({
+      plan: z.enum(["none", "starter", "growth", "custom"]),
+      reels_per_month: z.coerce.number().int().min(0, "Reels can't be negative").max(200, "That's too many reels"),
+    })
+    .safeParse({ plan: formData.get("plan"), reels_per_month: formData.get("reels_per_month") || 0 });
+  if (!isUuid(businessId)) return { error: "Business not found." };
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message };
+  const { plan } = parsed.data;
+  const reels = plan === "none" ? 0 : parsed.data.reels_per_month;
+  if (plan !== "none" && reels === 0) return { error: "Set how many reels a month this plan includes." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("businesses").update({ plan, reels_per_month: reels }).eq("id", businessId);
+  if (error) return { error: "Couldn't update the plan." };
+  refresh();
+  return { ok: plan === "none" ? "Plan removed." : "Plan saved." };
+}
+
+export async function createInvoice(businessId: string, _: AdminState, formData: FormData): Promise<AdminState> {
+  await requireRole("admin");
+  const parsed = amount.safeParse(formData.get("amount_inr"));
+  const note = z.string().trim().max(300).safeParse(formData.get("note") ?? "");
+  if (!isUuid(businessId)) return { error: "Business not found." };
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message };
+  if (parsed.data === 0) return { error: "Enter an amount above zero." };
+  if (!note.success) return { error: "Keep the note under 300 characters." };
+  const { period } = monthRange(parseMonth(formData.get("month")));
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("invoices")
+    .insert({ business_id: businessId, period, amount_inr: parsed.data, note: note.data || null });
+  if (error) {
+    return { error: error.code === "23505" ? "There's already an invoice for that month." : "Couldn't create the invoice." };
+  }
+  refresh();
+  return { ok: "Invoice created. The business can see it now." };
+}
+
+export async function setInvoiceStatus(invoiceId: string, status: "paid" | "void") {
+  await requireRole("admin");
+  if (!isUuid(invoiceId) || (status !== "paid" && status !== "void")) return;
+  const supabase = await createClient();
+  await supabase
+    .from("invoices")
+    .update(status === "paid" ? { status, paid_at: new Date().toISOString() } : { status })
+    .eq("id", invoiceId)
+    .eq("status", "due");
+  refresh();
 }

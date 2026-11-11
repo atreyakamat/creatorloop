@@ -10,6 +10,7 @@ import { reserveAiUse } from "@/lib/ai/usage";
 import { generateCalendar, generateReport } from "@/lib/ai/plan";
 import { currentMonth, monthRange, parseMonth } from "@/lib/ai-docs";
 import { getMonthStats } from "@/lib/report";
+import { getUsage } from "@/lib/billing";
 import { cleanInstagram, isUuid } from "@/lib/safe";
 import {
   CATEGORIES,
@@ -130,7 +131,7 @@ export async function setBriefStatus(briefId: string, status: "open" | "cancelle
   const supabase = await createClient();
   const { data: brief } = await supabase
     .from("briefs")
-    .select("id, status, ai_brief")
+    .select("id, status, ai_brief, deliverables")
     .eq("id", briefId)
     .eq("business_id", business.id)
     .maybeSingle();
@@ -139,7 +140,20 @@ export async function setBriefStatus(briefId: string, status: "open" | "cancelle
   // Only send briefs that have AI content; only draft/open briefs can change here.
   if (status === "open" && !brief.ai_brief) redirect(`/business/briefs/${briefId}`);
   if (brief.status !== "draft" && brief.status !== "open") redirect(`/business/briefs/${briefId}`);
-  await supabase.from("briefs").update({ status }).eq("id", briefId);
+
+  // Sending needs a plan with reels left this month. Checked here for a clear
+  // message; the database enforces the same rule.
+  if (status === "open" && brief.status === "draft") {
+    const usage = await getUsage(business);
+    if (!usage.active) redirect(`/business/briefs/${briefId}?plan=required`);
+    if (brief.deliverables > usage.left) redirect(`/business/briefs/${briefId}?plan=limit`);
+  }
+
+  const { error } = await supabase.from("briefs").update({ status }).eq("id", briefId);
+  if (error) {
+    const code = error.message.includes("PLAN_LIMIT") ? "limit" : error.message.includes("PLAN_REQUIRED") ? "required" : "failed";
+    redirect(`/business/briefs/${briefId}?plan=${code}`);
+  }
 
   if (status === "cancelled") redirect("/business");
   refresh();

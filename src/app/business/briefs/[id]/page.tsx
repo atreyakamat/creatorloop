@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { RefreshCw, Send, Sparkles, X } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
@@ -17,7 +18,7 @@ export const metadata: Metadata = { title: "Brief" };
 
 type Props = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ ai?: string }>;
+  searchParams: Promise<{ ai?: string; plan?: string }>;
 };
 
 export default function BriefPage({ params, searchParams }: Props) {
@@ -34,8 +35,14 @@ const aiMessages: Record<string, string> = {
   failed: "The AI couldn't write this brief just now. Your answers are saved, so try again in a moment.",
 };
 
+const planMessages: Record<string, string> = {
+  required: "Your brief is saved. To send it to creators, activate a plan.",
+  limit: "This brief needs more reels than you have left this month.",
+  failed: "Couldn't send this brief just now. Please try again.",
+};
+
 async function BriefView({ params, searchParams }: Props) {
-  const [{ id }, { ai }] = await Promise.all([params, searchParams]);
+  const [{ id }, { ai, plan }] = await Promise.all([params, searchParams]);
   const found = await getMyBrief(id);
   if (!found) notFound();
 
@@ -112,6 +119,15 @@ async function BriefView({ params, searchParams }: Props) {
       ) : null}
 
       {reels}
+
+      {plan && planMessages[plan] ? (
+        <div role="alert" className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-sunset-500/10 px-4 py-3 text-sm text-sunset-600">
+          <span>{planMessages[plan]}</span>
+          <Link href="/business/billing" className="font-medium underline underline-offset-4">
+            See plans
+          </Link>
+        </div>
+      ) : null}
 
       {content ? (
         <div className="mt-8">

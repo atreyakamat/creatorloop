@@ -155,3 +155,22 @@ export async function listPayouts() {
     brief: r.brief_id ? (briefById.get(r.brief_id) ?? null) : null,
   }));
 }
+
+export async function getAdminBusiness(id: string) {
+  await requireRole("admin");
+  if (!isUuid(id)) return null;
+  const supabase = await createClient();
+  const { data: business } = await supabase.from("businesses").select("*").eq("id", id).maybeSingle();
+  if (!business) return null;
+  const [{ data: owner }, { data: invoices }, { data: briefs }] = await Promise.all([
+    supabase.from("profiles").select("full_name, phone").eq("id", business.owner_id).maybeSingle(),
+    supabase.from("invoices").select("*").eq("business_id", id).order("period", { ascending: false }).limit(36),
+    supabase
+      .from("briefs")
+      .select("id, title, status, deliverables, created_at")
+      .eq("business_id", id)
+      .order("created_at", { ascending: false })
+      .limit(50),
+  ]);
+  return { business, owner: owner ?? null, invoices: invoices ?? [], briefs: briefs ?? [] };
+}

@@ -308,7 +308,15 @@ export default function Home() {
 
       <footer className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 px-5 pb-10 text-sm text-ink-500 sm:flex-row sm:items-center">
         <Logo className="text-ink-950" />
-        <p>Made in Goa · © CreatorLoop</p>
+        <p className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <a href="/terms" className="hover:text-ink-950">
+            Terms
+          </a>
+          <a href="/privacy" className="hover:text-ink-950">
+            Privacy
+          </a>
+          <span>Made in Goa · © CreatorLoop</span>
+        </p>
       </footer>
     </div>
   );
