@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, MapPin, Pencil, Plus, Sparkles } from "lucide-react";
+import { businessNav } from "@/components/nav-links";
 import { AppShell, Greeting, StepList } from "@/components/app-shell";
 import { ButtonLink, Card } from "@/components/ui";
 import { StatusBadge } from "@/components/status-badge";
@@ -10,7 +11,7 @@ export const metadata: Metadata = { title: "Business" };
 
 export default function BusinessPage() {
   return (
-    <AppShell>
+    <AppShell nav={businessNav}>
       <BusinessHome />
     </AppShell>
   );

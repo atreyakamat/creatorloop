@@ -11,8 +11,20 @@ const styles: Record<BriefStatus, { label: string; className: string }> = {
   cancelled: { label: "Cancelled", className: "bg-sand-100 text-ink-500" },
 };
 
-export function StatusBadge({ status }: { status: BriefStatus }) {
-  const s = styles[status];
+const creatorLabels: Partial<Record<BriefStatus, string>> = {
+  open: "Open",
+  assigned: "Upload your reels",
+  in_review: "With the business",
+};
+
+export function StatusBadge({ status, viewer }: { status: BriefStatus; viewer?: "creator" | "admin" }) {
+  const base = styles[status];
+  const s =
+    viewer === "creator" && creatorLabels[status]
+      ? { ...base, label: creatorLabels[status]! }
+      : viewer === "admin" && status === "open"
+        ? { ...base, label: "Needs a creator" }
+        : base;
   return (
     <span className={cn("inline-flex rounded-full px-2.5 py-1 text-xs font-medium", s.className)}>{s.label}</span>
   );

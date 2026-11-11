@@ -49,6 +49,7 @@ export type Business = Timestamps & {
 
 export type CreatorProfile = Timestamps & {
   id: string;
+  display_name: string;
   bio: string | null;
   niches: string[];
   instagram: string | null;
@@ -93,6 +94,14 @@ export type Payout = {
   created_at: string;
 };
 
+export type BriefApplication = {
+  id: string;
+  brief_id: string;
+  creator_id: string;
+  note: string | null;
+  created_at: string;
+};
+
 export type AiUsage = {
   id: number;
   user_id: string;
@@ -110,6 +119,7 @@ export type Database = {
       submissions: Table<Submission, "brief_id" | "creator_id" | "video_path">;
       payouts: Table<Payout, "creator_id" | "amount_inr">;
       ai_usage: Table<AiUsage, "user_id" | "kind">;
+      brief_applications: Table<BriefApplication, "brief_id" | "creator_id">;
     };
     Views: { [_ in never]: never };
     Functions: {

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { businessNav } from "@/components/nav-links";
 import { AppShell } from "@/components/app-shell";
 import { BackLink } from "@/components/ui";
 import { getMyBusiness } from "@/lib/business";
@@ -9,7 +10,7 @@ export const metadata: Metadata = { title: "New brief" };
 
 export default function NewBriefPage() {
   return (
-    <AppShell>
+    <AppShell nav={businessNav}>
       <NewBrief />
     </AppShell>
   );

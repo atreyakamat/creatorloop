@@ -14,14 +14,14 @@ Next.js 16 (App Router, Cache Components) · TypeScript · Tailwind CSS 4 · Fra
 | --- | --- | --- |
 | 1 | Scaffold, auth, database + access rules, landing page, PWA | ✅ Done |
 | 2 | Business onboarding + AI brief generator (Claude) | ✅ Done |
-| 3 | Creator profile, open briefs, video uploads | Next |
+| 3 | Creator profiles, open briefs, applications, video uploads, reel review | ✅ Done |
 | 4 | Admin panel, payouts, deploy | |
 | 5 | Pilot with 2–3 Goa businesses | |
 
 ## Set up (one time)
 
 1. **Supabase**: create a project at supabase.com (free tier is fine).
-2. **Database**: in the Supabase dashboard, open *SQL Editor* and run each file in `supabase/migrations/` in order (`0001`, then `0002`).
+2. **Database**: in the Supabase dashboard, open *SQL Editor* and run each file in `supabase/migrations/` in order, lowest number first.
 3. **Auth URLs**: *Authentication → URL Configuration*. Set Site URL to `http://localhost:3000` (later your Netlify URL) and add `<site>/auth/confirm` to Redirect URLs.
 4. **Env**: `cp .env.example .env.local`, then fill in the URL and publishable key from *Project Settings → API*, and your `ANTHROPIC_API_KEY` (console.anthropic.com) for AI briefs.
 5. **Run**: `npm install && npm run dev` and open http://localhost:3000.

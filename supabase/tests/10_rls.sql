@@ -39,7 +39,7 @@ insert into public.briefs (business_id, title) values ('bbbbbbbb-0000-0000-0000-
 -- Creator C (assigned)
 select set_config('request.jwt.claim.sub','cccccccc-0000-0000-0000-000000000001',false);
 select 'T7 creatorC sees briefs -> ' || count(*) || ' (expect 1)' from public.briefs;
-select 'T8 creatorC sees businesses -> ' || count(*) || ' (expect 0)' from public.businesses;
+select 'T8 creatorC sees only the business behind their brief -> ' || count(*) || ' (expect 1)' from public.businesses;
 insert into public.businesses (owner_id, name, category) values ('cccccccc-0000-0000-0000-000000000001','Creator biz','cafe');
 insert into public.submissions (brief_id, creator_id, video_path) values ('eeeeeeee-0000-0000-0000-00000000000a','cccccccc-0000-0000-0000-000000000001','cccccccc-0000-0000-0000-000000000001/eeeeeeee-0000-0000-0000-00000000000a/v.mp4');
 select 'T9 creatorC submission saved -> ' || count(*) || ' (expect 1)' from public.submissions;

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { businessNav } from "@/components/nav-links";
 import { AppShell } from "@/components/app-shell";
 import { BackLink } from "@/components/ui";
 import { getMyBusiness } from "@/lib/business";
@@ -8,7 +9,7 @@ export const metadata: Metadata = { title: "Your business" };
 
 export default function OnboardingPage() {
   return (
-    <AppShell>
+    <AppShell nav={businessNav}>
       <Onboarding />
     </AppShell>
   );

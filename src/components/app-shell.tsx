@@ -3,10 +3,11 @@ import { LogOut } from "lucide-react";
 import { Logo } from "@/components/ui";
 import { signOut } from "@/app/(auth)/actions";
 import type { CurrentUser } from "@/lib/auth";
+import { NavLinks, type NavItem } from "@/components/nav-links";
 
 const roleLabel = { business: "Business", creator: "Creator", admin: "Admin" } as const;
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({ children, nav }: { children: ReactNode; nav?: NavItem[] }) {
   return (
     <div className="min-h-dvh bg-sand-50">
       <header className="sticky top-0 z-10 border-b border-ink-950/5 bg-sand-50/85 backdrop-blur">
@@ -22,6 +23,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             </button>
           </form>
         </div>
+        {nav ? (
+          <div className="mx-auto max-w-5xl px-2">
+            <Suspense fallback={<div className="h-[42px]" />}>
+              <NavLinks items={nav} />
+            </Suspense>
+          </div>
+        ) : null}
       </header>
       <main className="mx-auto max-w-5xl px-5 py-8">
         <Suspense fallback={<DashboardSkeleton />}>{children}</Suspense>

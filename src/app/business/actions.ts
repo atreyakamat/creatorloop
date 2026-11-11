@@ -178,3 +178,40 @@ async function runGeneration(
     return "failed";
   }
 }
+
+// ─── Reviewing reels ────────────────────────────────────────────────────────
+
+const reviewSchema = z.object({
+  decision: z.enum(["approved", "changes_requested"]),
+  feedback: z.string().trim().max(1000),
+});
+
+export async function reviewSubmission(submissionId: string, _: FormState, formData: FormData): Promise<FormState> {
+  if (!isUuid(submissionId)) return { error: "Reel not found." };
+  const parsed = reviewSchema.safeParse({
+    decision: formData.get("decision"),
+    feedback: formData.get("feedback") ?? "",
+  });
+  if (!parsed.success) return { error: "Keep feedback under 1,000 characters." };
+  const { decision, feedback } = parsed.data;
+  if (decision === "changes_requested" && feedback.length < 3) {
+    return { error: "Tell the creator what to change." };
+  }
+
+  const { business } = await getMyBusiness();
+  if (!business) redirect("/business/onboarding");
+
+  // RLS limits this to reels on this business's briefs; the database also
+  // refuses to review a reel twice or to touch anything but status and feedback.
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("submissions")
+    .update({ status: decision, feedback: feedback || null })
+    .eq("id", submissionId)
+    .eq("status", "pending")
+    .select("id")
+    .maybeSingle();
+  if (error || !data) return { error: "This reel has already been reviewed." };
+  refresh();
+  return undefined;
+}
