@@ -12,6 +12,7 @@ import { aiBriefSchema } from "@/lib/briefs";
 import { safeHttpUrl } from "@/lib/safe";
 import { cancelBriefAsAdmin, markPayoutPaid, unassignCreator } from "../../actions";
 import { AssignForm, CloseForm } from "./forms";
+import { MatchSuggestions } from "./match";
 
 export const metadata: Metadata = { title: "Brief · Admin" };
 
@@ -80,6 +81,7 @@ async function AdminBrief({ params }: Props) {
           ) : (
             <p className="mb-5 text-sm text-ink-500">No applications yet. You can still assign any creator with a complete profile.</p>
           )}
+          {candidates.length > 1 ? <MatchSuggestions briefId={brief.id} /> : null}
           {candidates.length ? (
             <AssignForm
               briefId={brief.id}

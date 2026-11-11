@@ -7,6 +7,9 @@ import { getMyBusiness } from "@/lib/business";
 import { createClient } from "@/lib/supabase/server";
 import { AiNotConfiguredError, aiConfigured, generateAiBrief } from "@/lib/ai/brief";
 import { reserveAiUse } from "@/lib/ai/usage";
+import { generateCalendar, generateReport } from "@/lib/ai/plan";
+import { currentMonth, monthRange, parseMonth } from "@/lib/ai-docs";
+import { getMonthStats } from "@/lib/report";
 import { cleanInstagram, isUuid } from "@/lib/safe";
 import {
   CATEGORIES,
@@ -214,4 +217,104 @@ export async function reviewSubmission(submissionId: string, _: FormState, formD
   if (error || !data) return { error: "This reel has already been reviewed." };
   refresh();
   return undefined;
+}
+
+// ─── Reel results (after posting) ───────────────────────────────────────────
+
+const count = z.preprocess(
+  (v) => (v === "" || v === null || v === undefined ? null : v),
+  z.coerce.number().int().min(0).max(1_000_000_000).nullable(),
+);
+
+export async function saveReelResults(submissionId: string, _: FormState, formData: FormData): Promise<FormState> {
+  if (!isUuid(submissionId)) return { error: "Reel not found." };
+  const parsed = z.object({ views: count, likes: count }).safeParse({
+    views: formData.get("views"),
+    likes: formData.get("likes"),
+  });
+  if (!parsed.success) return { error: "Enter whole numbers for views and likes." };
+
+  const { business } = await getMyBusiness();
+  if (!business) redirect("/business/onboarding");
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("submissions")
+    .update(parsed.data)
+    .eq("id", submissionId)
+    .eq("status", "approved")
+    .select("id")
+    .maybeSingle();
+  if (error || !data) return { error: "Results can only be saved for approved reels." };
+  refresh();
+  return undefined;
+}
+
+// ─── AI content plan and monthly report ─────────────────────────────────────
+
+type AiDocResult = "ok" | "limit" | "not_configured" | "failed" | "no_data";
+
+function aiDocRedirect(path: string, result: AiDocResult): never {
+  redirect(result === "ok" ? path : `${path}${path.includes("?") ? "&" : "?"}ai=${result}`);
+}
+
+export async function createContentPlan() {
+  const { business } = await getMyBusiness();
+  if (!business) redirect("/business/onboarding");
+  if (!aiConfigured()) aiDocRedirect("/business/plan", "not_configured");
+  if (!(await reserveAiUse("calendar"))) aiDocRedirect("/business/plan", "limit");
+
+  const supabase = await createClient();
+  let result: AiDocResult = "ok";
+  try {
+    const { data: recent } = await supabase
+      .from("briefs")
+      .select("title")
+      .eq("business_id", business.id)
+      .neq("status", "cancelled")
+      .order("created_at", { ascending: false })
+      .limit(8);
+    const plan = await generateCalendar({ business, recentTitles: (recent ?? []).map((r) => r.title) });
+    const { error } = await supabase.from("ai_documents").upsert(
+      {
+        business_id: business.id,
+        kind: "calendar",
+        period: monthRange(currentMonth()).period,
+        content: plan as unknown as Json,
+      },
+      { onConflict: "business_id,kind,period" },
+    );
+    if (error) result = "failed";
+  } catch (err) {
+    console.error("[ai-plan] generation failed", { businessId: business.id, err });
+    result = "failed";
+  }
+  aiDocRedirect("/business/plan", result);
+}
+
+export async function createMonthlyReport(monthInput: string) {
+  const month = parseMonth(monthInput);
+  const path = `/business/report?month=${month}`;
+  const { business } = await getMyBusiness();
+  if (!business) redirect("/business/onboarding");
+
+  const stats = await getMonthStats(business.id, month);
+  if (stats.data.delivered === 0) aiDocRedirect(path, "no_data");
+  if (!aiConfigured()) aiDocRedirect(path, "not_configured");
+  if (!(await reserveAiUse("report"))) aiDocRedirect(path, "limit");
+
+  let result: AiDocResult = "ok";
+  try {
+    const report = await generateReport({ business, data: stats.data });
+    const supabase = await createClient();
+    const { error } = await supabase.from("ai_documents").upsert(
+      { business_id: business.id, kind: "report", period: stats.period, content: report as unknown as Json },
+      { onConflict: "business_id,kind,period" },
+    );
+    if (error) result = "failed";
+  } catch (err) {
+    console.error("[ai-report] generation failed", { businessId: business.id, err });
+    result = "failed";
+  }
+  aiDocRedirect(path, result);
 }

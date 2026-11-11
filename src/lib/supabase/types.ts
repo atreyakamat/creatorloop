@@ -82,6 +82,8 @@ export type Submission = Timestamps & {
   caption: string | null;
   status: SubmissionStatus;
   feedback: string | null;
+  views: number | null;
+  likes: number | null;
 };
 
 export type Payout = {
@@ -101,6 +103,14 @@ export type BriefApplication = {
   creator_id: string;
   note: string | null;
   created_at: string;
+};
+
+export type AiDocument = Timestamps & {
+  id: string;
+  business_id: string;
+  kind: "calendar" | "report";
+  period: string;
+  content: Json;
 };
 
 export type AuditLog = {
@@ -131,6 +141,7 @@ export type Database = {
       payouts: Table<Payout, "creator_id" | "amount_inr">;
       ai_usage: Table<AiUsage, "user_id" | "kind">;
       audit_log: Table<AuditLog, "action" | "entity">;
+      ai_documents: Table<AiDocument, "business_id" | "kind" | "period" | "content">;
       brief_applications: Table<BriefApplication, "brief_id" | "creator_id">;
     };
     Views: { [_ in never]: never };

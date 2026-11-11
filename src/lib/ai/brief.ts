@@ -1,29 +1,11 @@
 import "server-only";
-import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { aiBriefSchema, goalLabel, type AiBrief, type BriefAnswers } from "@/lib/briefs";
 import { promptText } from "@/lib/safe";
 import type { Business } from "@/lib/supabase/types";
+import { AI_MODEL, anthropic, todayInGoa } from "./client";
 
-const MODEL = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-5-5";
-
-export class AiNotConfiguredError extends Error {
-  constructor() {
-    super("ANTHROPIC_API_KEY is not set");
-  }
-}
-
-export function aiConfigured() {
-  return Boolean(process.env.ANTHROPIC_API_KEY);
-}
-
-let client: Anthropic | null = null;
-function anthropic() {
-  if (!process.env.ANTHROPIC_API_KEY) throw new AiNotConfiguredError();
-  // Stay under typical serverless request limits; one retry on transient errors.
-  client ??= new Anthropic({ timeout: 25_000, maxRetries: 1 });
-  return client;
-}
+export { AiNotConfiguredError, aiConfigured } from "./client";
 
 const SYSTEM = `You are CreatorLoop's content strategist. You write short-form video briefs that local creators in Goa, India shoot for small businesses: cafés, restaurants, hotels, shops and experiences.
 
@@ -43,12 +25,7 @@ export async function generateAiBrief(input: {
   now?: Date;
 }): Promise<AiBrief> {
   const { business, answers } = input;
-  const today = (input.now ?? new Date()).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: "Asia/Kolkata",
-  });
+  const today = todayInGoa(input.now);
 
   const userMessage = `Today is ${today}.
 
@@ -74,7 +51,7 @@ Reels needed: ${answers.deliverables}
 Write one brief that every reel in this order can be based on.`;
 
   const message = await anthropic().messages.parse({
-    model: MODEL,
+    model: AI_MODEL,
     max_tokens: 2000,
     system: SYSTEM,
     messages: [{ role: "user", content: userMessage }],

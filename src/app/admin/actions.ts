@@ -5,6 +5,10 @@ import { z } from "zod";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { isUuid } from "@/lib/safe";
+import { getAdminBrief } from "@/lib/admin";
+import { aiConfigured } from "@/lib/ai/client";
+import { suggestCreators } from "@/lib/ai/match";
+import { reserveAiUse } from "@/lib/ai/usage";
 
 export type AdminState = { error?: string; ok?: string } | undefined;
 
@@ -105,4 +109,40 @@ export async function cancelBriefAsAdmin(briefId: string) {
   const supabase = await createClient();
   await supabase.from("briefs").update({ status: "cancelled" }).eq("id", briefId).in("status", ["draft", "open", "assigned"]);
   refresh();
+}
+
+export type MatchState =
+  | { error?: string; picks?: Array<{ id: string; name: string; reason: string }> }
+  | undefined;
+
+// AI shortlist for an open brief. It only suggests: the admin still assigns.
+export async function suggestMatches(briefId: string): Promise<MatchState> {
+  await requireRole("admin");
+  if (!isUuid(briefId)) return { error: "Brief not found." };
+  const found = await getAdminBrief(briefId);
+  if (!found || found.brief.status !== "open") return { error: "This brief is no longer open." };
+  if (!found.candidates.length) return { error: "No creators with a complete profile yet." };
+  if (!aiConfigured()) return { error: "AI isn't switched on yet. Add ANTHROPIC_API_KEY to the server environment." };
+  if (!(await reserveAiUse("match"))) return { error: "You've reached today's AI limit for matching." };
+
+  try {
+    const picks = await suggestCreators({
+      brief: found.brief,
+      business: found.business,
+      candidates: found.candidates.map((c) => ({
+        id: c.id,
+        display_name: c.display_name,
+        bio: c.bio,
+        niches: c.niches,
+        followers: c.followers,
+        rate_per_reel: c.rate_per_reel,
+        is_verified: c.is_verified,
+        note: c.application ? (c.application.note ?? "") : null,
+      })),
+    });
+    return picks.length ? { picks } : { error: "The AI didn't find a clear fit. Pick manually." };
+  } catch (err) {
+    console.error("[ai-match] failed", { briefId, err });
+    return { error: "The AI couldn't suggest anyone just now. Try again in a moment." };
+  }
 }

@@ -25,7 +25,7 @@ function Question({ n, title, children }: { n: number; title: string; children: 
 const chip =
   "cursor-pointer rounded-full border px-3.5 py-2 text-sm transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-sunset-500";
 
-export function BriefForm() {
+export function BriefForm({ defaultFeature }: { defaultFeature?: string }) {
   const [state, action, pending] = useActionState<FormState, FormData>(createBrief, undefined);
   const [vibes, setVibes] = useState<string[]>([]);
 
@@ -52,6 +52,7 @@ export function BriefForm() {
         <TextArea
           label="Your star dish, room, product or experience"
           name="feature"
+          defaultValue={defaultFeature}
           placeholder="Our prawn rava fry and the sunset view from the deck"
           required
           minLength={3}

@@ -8,16 +8,18 @@ import { BriefForm } from "./brief-form";
 
 export const metadata: Metadata = { title: "New brief" };
 
-export default function NewBriefPage() {
+type Props = { searchParams: Promise<{ feature?: string }> };
+
+export default function NewBriefPage({ searchParams }: Props) {
   return (
     <AppShell nav={businessNav}>
-      <NewBrief />
+      <NewBrief searchParams={searchParams} />
     </AppShell>
   );
 }
 
-async function NewBrief() {
-  const { business } = await getMyBusiness();
+async function NewBrief({ searchParams }: Props) {
+  const [{ business }, { feature }] = await Promise.all([getMyBusiness(), searchParams]);
   if (!business) redirect("/business/onboarding");
 
   return (
@@ -28,7 +30,7 @@ async function NewBrief() {
         Answer in your own words. We&apos;ll turn it into hooks, a shot list and captions for {business.name}.
       </p>
       <div className="mt-8">
-        <BriefForm />
+        <BriefForm defaultFeature={typeof feature === "string" ? feature.slice(0, 300) : undefined} />
       </div>
     </div>
   );
