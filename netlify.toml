@@ -3,6 +3,11 @@
 [build]
   command = "npm run build"
 
+# Required so Netlify runs the build through its Next.js adapter
+# (without it, only static files get published and every route 404s).
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
 [build.environment]
   NODE_VERSION = "22"
   # This branch serves only the marketing page + waitlist. Delete this line
