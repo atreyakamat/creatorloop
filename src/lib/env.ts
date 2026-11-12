@@ -21,3 +21,9 @@ export function hasSupabaseEnv() {
 export function siteUrl() {
   return (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
 }
+
+// Landing-only mode: publish the marketing page with a waitlist before the app
+// itself is switched on. Set NEXT_PUBLIC_LANDING_ONLY=1 (the `landing` branch does).
+export function landingOnly() {
+  return process.env.NEXT_PUBLIC_LANDING_ONLY === "1";
+}

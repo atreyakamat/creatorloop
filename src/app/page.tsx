@@ -12,9 +12,14 @@ import {
 import { ButtonLink, Logo, cn } from "@/components/ui";
 import { HeroPhone, Reveal } from "@/components/landing/motion";
 import { faqs, plans, whatsappLink } from "@/config/site";
+import { landingOnly } from "@/lib/env";
+import { Waitlist } from "@/components/landing/waitlist";
 
 export default function Home() {
   const wa = whatsappLink();
+  const landing = landingOnly();
+  // Before the app opens, every call to action goes to the waitlist.
+  const join = (role: "business" | "creator") => (landing ? `/?as=${role}#waitlist` : `/signup?as=${role}`);
 
   return (
     <div className="overflow-x-clip">
@@ -28,12 +33,20 @@ export default function Home() {
           <a href="#pricing" className="hidden rounded-full px-4 py-2 text-sm text-ink-700 hover:bg-sand-100 sm:inline">
             Pricing
           </a>
-          <ButtonLink href="/login" variant="ghost" className="px-4 py-2">
-            Log in
-          </ButtonLink>
-          <ButtonLink href="/signup" className="px-4 py-2">
-            Get started
-          </ButtonLink>
+          {landing ? (
+            <ButtonLink href="#waitlist" className="px-4 py-2">
+              Join the waitlist
+            </ButtonLink>
+          ) : (
+            <>
+              <ButtonLink href="/login" variant="ghost" className="px-4 py-2">
+                Log in
+              </ButtonLink>
+              <ButtonLink href="/signup" className="px-4 py-2">
+                Get started
+              </ButtonLink>
+            </>
+          )}
         </nav>
       </header>
 
@@ -49,7 +62,7 @@ export default function Home() {
         />
         <Reveal>
           <p className="inline-flex items-center gap-2 rounded-full border border-ink-950/10 bg-white/70 px-3 py-1 text-xs font-medium text-ink-700">
-            <span className="size-1.5 rounded-full bg-palm-500" /> Now onboarding Goa businesses
+            <span className="size-1.5 rounded-full bg-palm-500" /> {landing ? "Opening soon in Goa" : "Now onboarding Goa businesses"}
           </p>
           <h1 className="mt-5 font-display text-5xl leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
             Local creators.
@@ -61,10 +74,10 @@ export default function Home() {
             know Goa. Answer five questions, approve what you like, and post.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <ButtonLink href="/signup?as=business" variant="accent">
+            <ButtonLink href={join("business")} variant="accent">
               I run a business <ArrowRight className="size-4" aria-hidden />
             </ButtonLink>
-            <ButtonLink href="/signup?as=creator" variant="outline">
+            <ButtonLink href={join("creator")} variant="outline">
               I&apos;m a creator
             </ButtonLink>
           </div>
@@ -142,7 +155,7 @@ export default function Home() {
                 </li>
               ))}
             </ul>
-            <ButtonLink href="/signup?as=business" variant="accent" className="mt-8">
+            <ButtonLink href={join("business")} variant="accent" className="mt-8">
               Start as a business
             </ButtonLink>
           </div>
@@ -164,7 +177,7 @@ export default function Home() {
                 </li>
               ))}
             </ul>
-            <ButtonLink href="/signup?as=creator" className="mt-8">
+            <ButtonLink href={join("creator")} className="mt-8">
               Join as a creator
             </ButtonLink>
           </div>
@@ -240,7 +253,7 @@ export default function Home() {
                   ))}
                 </ul>
                 <ButtonLink
-                  href="/signup?as=business"
+                  href={join("business")}
                   variant={p.highlighted ? "accent" : "outline"}
                   className="mt-8 w-full"
                 >
@@ -273,6 +286,8 @@ export default function Home() {
         </div>
       </section>
 
+      {landing ? <Waitlist whatsapp={wa} /> : null}
+
       {/* Final CTA */}
       <section className="px-5 py-20">
         <Reveal>
@@ -285,11 +300,13 @@ export default function Home() {
               Your first reel could be live next week.
             </h2>
             <p className="mt-3 max-w-lg text-white/85">
-              Sign up in a minute. We&apos;ll help you write your first brief.
+              {landing
+                ? "Join the waitlist and we'll message you as soon as we open."
+                : "Sign up in a minute. We'll help you write your first brief."}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <ButtonLink href="/signup?as=business" className="bg-ink-950 hover:bg-ink-900">
-                Get started <ArrowRight className="size-4" aria-hidden />
+              <ButtonLink href={join("business")} className="bg-ink-950 hover:bg-ink-900">
+                {landing ? "Join the waitlist" : "Get started"} <ArrowRight className="size-4" aria-hidden />
               </ButtonLink>
               {wa ? (
                 <a
