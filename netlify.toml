@@ -10,3 +10,7 @@
 
 [build.environment]
   NODE_VERSION = "22"
+  # NEXT_PUBLIC_* values are inlined into the page by design (the Supabase
+  # publishable key is a public, client-side key). This exempts only these
+  # named keys from Netlify's secret scanning; real secrets are still scanned.
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SITE_URL,NEXT_PUBLIC_WHATSAPP_NUMBER,NEXT_PUBLIC_UPI_ID,NEXT_PUBLIC_UPI_NAME,NEXT_PUBLIC_CONTACT_EMAIL,NEXT_PUBLIC_LANDING_ONLY"
