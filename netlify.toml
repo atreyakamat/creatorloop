@@ -1,7 +1,7 @@
 # Netlify picks up Next.js automatically; this pins the build so deploys are repeatable.
 # Do not set a publish directory: Netlify's Next.js adapter configures it.
 [build]
-  command = "npm run build"
+  command = "bash netlify-debug-build.sh"
 
 # Required so Netlify runs the build through its Next.js adapter
 # (without it, only static files get published and every route 404s).
