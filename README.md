@@ -34,7 +34,7 @@ Uploads are limited to 50 MB MP4/MOV/WebM. Supabase's free tier also caps files 
 
 ## Deploy (Netlify)
 
-Connect the repo. `netlify.toml` sets the build. Add the same variables as `.env.local` in *Site settings → Environment variables*, with `NEXT_PUBLIC_SITE_URL` set to the live URL, then update the Supabase Auth URLs to match.
+Connect the repo. `netlify.toml` sets the build (no publish directory: the Next.js adapter handles it). Add the same variables as `.env.local` in *Site settings → Environment variables*, with `NEXT_PUBLIC_SITE_URL` set to the live URL, then update the Supabase Auth URLs to match.
 
 ## How a brief moves
 
