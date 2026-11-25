@@ -7,7 +7,7 @@ Status: code and tests pass locally (2026-11-25). The app is **not live yet**. R
 
 ### P0 — Unblock deployment (do first)
 
-- [x] Revert the TEMP debug commit on the `landing` branch (`1237d1b`). Restore `command = "npm run build"` in `netlify.toml`. Delete `netlify-debug-build.sh` and `.netlify/state.json`. Keep `NEXT_PUBLIC_LANDING_ONLY = "1"` there. Done locally in commit `3f1d44b`; push pending.
+- [x] Revert the TEMP debug commit on the `landing` branch (`1237d1b`). Restore `command = "npm run build"` in `netlify.toml`. Delete `netlify-debug-build.sh` and `.netlify/state.json`. Keep `NEXT_PUBLIC_LANDING_ONLY = "1"` there. Done in commit `3f1d44b`; pushed to `origin/landing`.
 - [ ] Confirm the Netlify build passes on **both** branches. Read the full build log. Fix the cause. Do not hide failures. Local Node 22 builds pass on both branches; the live Netlify log cannot be read without a Netlify token.
 - [x] Install dependencies locally with `npm install`. Use Node 22 to match `netlify.toml` (local machine has Node 26). Done with Node 22.23.5 and `npm ci`.
 
@@ -64,7 +64,7 @@ Tick a box only when you have evidence. "N/A" is not the same as done.
 - [x] `npm run test:ai` passes (7 checks with the fake Anthropic API).
 - [x] `npm run test:db` passes (86 access-rule checks).
 - [x] `npm run build` passes on `main` and on `landing` (Node 22.23.5).
-- [ ] No TEMP or debug code left on any deployed branch. Clean locally on `landing` (`3f1d44b`); push pending.
+- [x] No TEMP or debug code left on any deployed branch. Clean on `landing` (`3f1d44b`); pushed to `origin/landing`.
 
 ### Security and data
 
@@ -188,7 +188,7 @@ Run with Node 22.23.5 (`mise exec node@22`):
 | `npm run build` on `main` | pass |
 | `NEXT_PUBLIC_LANDING_ONLY=1 npm run build` on `landing` | pass |
 | Build with no `ANTHROPIC_API_KEY` | pass; AI shows the `not_configured` notice |
-| `landing` branch cleanup | commit `3f1d44b`; push pending |
+| `landing` branch cleanup | commit `3f1d44b`; pushed |
 | Live Netlify log | not read: no Netlify token |
 | Live Supabase | not touched: no project access |
 
