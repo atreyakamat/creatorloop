@@ -18,12 +18,12 @@ Next.js 16 (App Router, Cache Components) · TypeScript · Tailwind CSS 4 · Fra
 
 Money: an admin sets each business's plan and monthly reel allowance and raises invoices; businesses pay by UPI from the invoice and the admin marks it paid. Creator payouts are tracked the same way. The app records payments but does not move money.
 
-**Going live? Follow [docs/LAUNCH.md](docs/LAUNCH.md).**
+**Going live? Follow [docs/LAUNCH.md](docs/LAUNCH.md). Work queue and readiness checklist: [TODO.md](TODO.md).**
 
 ## Set up (one time)
 
 1. **Supabase**: create a project (free tier is fine).
-2. **Database**: in the Supabase *SQL Editor*, run each file in `supabase/migrations/` in order, lowest number first.
+2. **Database**: in the Supabase *SQL Editor*, either run `supabase/migrations/0009_full_rebuild.sql` on its own (one file, safe to re-run), or run `0001`–`0008` in filename order. See "Database engine" below.
 3. **Auth**: *Authentication → URL Configuration*. Set Site URL to your site (locally `http://localhost:3000`) and add `<site>/auth/confirm` to Redirect URLs. Keep email confirmation on. Turn on CAPTCHA before a public launch.
 4. **Env**: `cp .env.example .env.local`, then fill in the Supabase URL and publishable key (*Project Settings → API*) and `ANTHROPIC_API_KEY` (console.anthropic.com).
 5. **Run**: `npm install && npm run dev`, open http://localhost:3000.
@@ -35,6 +35,15 @@ Uploads are limited to 50 MB MP4/MOV/WebM. Supabase's free tier also caps files 
 ## Deploy (Netlify)
 
 Connect the repo. `netlify.toml` sets the build (no publish directory: the Next.js adapter handles it). Add the same variables as `.env.local` in *Site settings → Environment variables*, with `NEXT_PUBLIC_SITE_URL` set to the live URL, then update the Supabase Auth URLs to match.
+
+## Database engine (manage and rebuild)
+
+`supabase/migrations/0009_full_rebuild.sql` is a standalone copy of the whole database interface: enums, tables, columns, constraints, indexes, functions, triggers, row-level security, storage rules and grants. It is idempotent. Run it on an empty project, on top of `0001`–`0008`, or again to repair damage. "Standalone" means no dependency on the other migration files, not a separate Postgres schema — the app uses `public` through Supabase.
+
+- Keep it in sync: if you change another migration, change this file too.
+- Verify with `npm run test:db` (86 checks). The runner applies every file in `supabase/migrations/`, including the rebuild.
+- Back up before you run it on a project with real data. It rebuilds structure; it does not restore lost rows.
+- It restores columns added by later migrations, constraints, indexes, policies, triggers, functions and the private `submissions` bucket. A core column dropped by hand needs a backup or a fresh project.
 
 ## How a brief moves
 
@@ -98,6 +107,7 @@ src/
   proxy.ts                session refresh + first-line route protection
 public/sw.js              service worker (static assets only)
 supabase/migrations/      schema, access rules, storage, audit trail
+  0009_full_rebuild.sql     one-file standalone rebuild of the whole interface
 supabase/tests/           access-rule tests
 tests/                    unit and AI tests
 docs/security/            audit reports

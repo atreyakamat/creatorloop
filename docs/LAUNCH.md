@@ -4,7 +4,7 @@ Everything here is a one-time step. Do them in order.
 
 ## 1. Database (5 min)
 
-Supabase project `creatorloop` already has migrations 0001–0003. In the Supabase dashboard open **SQL Editor** and run, in order, the files `0004` to `0008` from `supabase/migrations/`. Then remove the test accounts:
+Supabase project `creatorloop` already has migrations 0001–0003. In the Supabase dashboard open **SQL Editor** and either run `supabase/migrations/0009_full_rebuild.sql` on its own, or run the files `0004` to `0008` from `supabase/migrations/` in order. The rebuild file is idempotent: it works on an empty project, on top of earlier migrations, and as a repair after damage. Then remove the test accounts:
 
 ```sql
 delete from auth.users where email like 'e2e-%@creatorloop.test';
