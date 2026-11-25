@@ -105,6 +105,8 @@ Tick a box only when you have evidence. "N/A" is not the same as done.
 
 ## 3. How to host
 
+For the full handoff — current state, what to send me, and the exact launch order — see [docs/GO-LIVE.md](docs/GO-LIVE.md).
+
 ### Supabase (database, auth, storage)
 
 1. Create a project (free tier is fine). Use the ref in `docs/LAUNCH.md` if that project is reused.

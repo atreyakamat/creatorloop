@@ -18,7 +18,7 @@ Next.js 16 (App Router, Cache Components) · TypeScript · Tailwind CSS 4 · Fra
 
 Money: an admin sets each business's plan and monthly reel allowance and raises invoices; businesses pay by UPI from the invoice and the admin marks it paid. Creator payouts are tracked the same way. The app records payments but does not move money.
 
-**Going live? Follow [docs/LAUNCH.md](docs/LAUNCH.md). Work queue and readiness checklist: [TODO.md](TODO.md).**
+**Going live? Follow [docs/LAUNCH.md](docs/LAUNCH.md). Work queue and readiness checklist: [TODO.md](TODO.md). Handoff runbook and current state: [docs/GO-LIVE.md](docs/GO-LIVE.md).**
 
 ## Set up (one time)
 
